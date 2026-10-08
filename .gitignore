@@ -1,0 +1,6 @@
+src/main/resources/db.properties
+target/
+out/
+.idea/
+*.iml
+.DS_Store

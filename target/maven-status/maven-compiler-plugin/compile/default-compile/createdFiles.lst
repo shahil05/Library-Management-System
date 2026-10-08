@@ -1,6 +1,0 @@
-com/library/TestBookDAO.class
-com/library/dao/IssueRecordDAO.class
-com/library/dao/BookDAO.class
-com/library/model/IssueRecord.class
-com/library/util/DBConnection.class
-com/library/model/Book.class
