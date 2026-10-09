@@ -1,38 +1,40 @@
 # Library Management System
 
-A role-based library management system built with Java, JDBC, MySQL, and JSP.
+A role-based library management web app built with Java, JDBC, MySQL, JSP and Servlets.
 
-## Progress Log
+## Features
+- Normalized 4-table MySQL schema (users, books, issue_records, borrowing_history)
+- DAO pattern: model, data-access and servlet layers kept separate
+- Book issue and return workflows using JDBC transactions (manual commit/rollback), with row locking (`SELECT ... FOR UPDATE`) to prevent double-issuing a copy
+- Reporting queries using JOIN, GROUP BY and DATEDIFF (overdue books, most-borrowed books)
+- Login with session-based, role-based access: separate dashboards for librarians and students, and pages that redirect anyone who is not logged in with the right role
 
-### Day 1 — Schema Design
-- Modeled the domain as 4 tables, split by entity vs relationship:
-  - `users` — librarians and students
-  - `books` — catalog
-  - `issue_records` — currently active loans
-  - `borrowing_history` — permanent record of completed loans
-- Kept active loans and historical loans in separate tables so archiving
-  a returned book never loses the audit trail needed for reporting.
+## Tech stack
+Java 17, JDBC, MySQL, JSP, Servlets (javax), Maven, Tomcat 7 (via the Maven plugin)
 
-### Day 2 — JDBC + DAO Layer
-- Added `DBConnection` (single place that opens a connection, reads
-  credentials from a git-ignored `db.properties` so passwords never hit GitHub)
-- Added `Book` model (POJO) and `BookDAO` (Create/Read/Update/Delete for
-  the `books` table) using `PreparedStatement` throughout to prevent SQL injection
-- Added `TestBookDAO` as a manual smoke test for the DAO layer
+## Project structure
+- `sql/schema.sql`: database schema
+- `sql/reports.sql`: reporting queries
+- `src/com/library/model`, `dao`, `servlet`, `util`: Java code
+- `src/main/webapp`: JSP pages
 
-### Day 3 — Issue/Return Workflow (Transactions)
-- Added `IssueRecordDAO` with `issueBook()` and `returnBook()`, both
-  wrapped in manual transactions (`setAutoCommit(false)`, `commit()`,
-  `rollback()`) so a partial failure never leaves `available_copies`
-  out of sync with `issue_records`
-- `issueBook()` uses `SELECT ... FOR UPDATE` to lock the book row during
-  the availability check, preventing two simultaneous issues of the same copy
+## How to run
+1. Run `sql/schema.sql` in MySQL to create the `library_management` database.
+2. Copy `src/main/resources/db.properties.example` to `src/main/resources/db.properties` and put in your MySQL password.
+3. Insert a test user, e.g.
+   `INSERT INTO users (name, email, password, role) VALUES ('Test Student', 'test@student.com', 'password123', 'STUDENT');`
+4. Run `mvn tomcat7:run` (or the `tomcat7:run` goal from the Maven panel in IntelliJ).
+5. Open `http://localhost:8080/login.jsp`.
 
-### Day 4 — Reporting Queries
-- `sql/reports.sql`: overdue books report (JOIN across issue_records,
-  books, users + DATEDIFF to calculate days late)
-- Most-borrowed books report (JOIN + GROUP BY + COUNT), deliberately
-  reading from `borrowing_history` rather than `issue_records` since
-  only the permanent log reflects books that have already been returned
+## Progress log
+- Day 1: schema design (entity vs relationship tables, active loans vs permanent history)
+- Day 2: JDBC connection utility, Book model, BookDAO with PreparedStatement
+- Day 3: transactional issue/return workflow
+- Day 4: reporting queries
+- Day 5: Maven + Tomcat, login servlet with sessions, role-based dashboards, logout
+- Day 6: access guards on dashboards, final README
 
-*(more to come: JSP + sessions, role-based dashboards, Tailwind styling)*
+## Known limitations / next steps
+- Passwords are stored in plain text; a real system would hash them (e.g. BCrypt)
+- Issue/return and reports currently run through test code and SQL; they are not yet wired to buttons on the dashboards
+- Styling is minimal
