@@ -1,4 +1,10 @@
-<%@ page import="java.sql.*" %>
+<%
+    String role = (String) session.getAttribute("role");
+    if (role == null || !role.equals("LIBRARIAN")) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
 <html>
 <body>
 <h2>Librarian Dashboard</h2>

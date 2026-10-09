@@ -1,3 +1,10 @@
+<%
+    String role = (String) session.getAttribute("role");
+    if (role == null || !role.equals("STUDENT")) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+%>
 <html>
 <body>
 <h2>Student Dashboard</h2>
